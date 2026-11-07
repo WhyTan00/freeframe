@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -30,8 +31,21 @@ class GuestCommentCreate(BaseModel):
     # "internal" is accepted only from a signed-in caller who can open the asset.
     visibility: CommentVisibility = CommentVisibility.public
     annotation: Optional[AnnotationData] = None
-    guest_email: Optional[str] = None  # Not needed if user is logged in
-    guest_name: Optional[str] = None
+    guest_email: Optional[str] = Field(default=None, max_length=255)  # Not needed if user is logged in
+    guest_name: Optional[str] = Field(default=None, max_length=255)
+
+    @field_validator("guest_email")
+    @classmethod
+    def email_fits_after_lowercasing(cls, value: Optional[str]) -> Optional[str]:
+        # The guest-comment route stores lower(), which can expand Unicode
+        # characters (for example, İ). Leave its existing normalization there.
+        if value is not None and len(value.lower()) > 255:
+            raise PydanticCustomError(
+                "string_too_long",
+                "String should have at most {max_length} characters after lowercasing",
+                {"max_length": 255},
+            )
+        return value
 
 class CommentUpdate(BaseModel):
     body: str

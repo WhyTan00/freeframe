@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { getGradientForProject } from '@/lib/gradient-utils'
 import type { Project } from '@/types'
 
@@ -93,4 +94,14 @@ describe('project pictures in the list view', () => {
     render(<ProjectsPage />)
     expect(pictures()).toEqual(inGrid)
   })
+})
+
+it('limits a pasted new-project name to the API column length', async () => {
+  const user = userEvent.setup()
+  render(<ProjectsPage />)
+  await user.click(screen.getByRole('button', { name: 'New Project', expanded: false }))
+  const name = screen.getByRole('textbox', { name: 'Project name' })
+  await user.click(name)
+  await user.paste('x'.repeat(256))
+  expect(name).toHaveValue('x'.repeat(255))
 })

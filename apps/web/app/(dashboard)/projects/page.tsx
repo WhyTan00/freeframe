@@ -376,6 +376,7 @@ export default function ProjectsPage() {
                   <Input
                     label="Project name"
                     placeholder="e.g. Brand Campaign 2025"
+                    maxLength={255}
                     value={form.name}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, name: e.target.value }))
